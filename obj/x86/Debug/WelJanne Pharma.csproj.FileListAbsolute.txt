@@ -1,0 +1,9 @@
+C:\Users\MichaelMaur\Documents\Visual Studio 2015\Projects\IT420_MAGDADARO\bin\x86\Debug\WindowsFormsApplication2.exe.config
+C:\Users\MichaelMaur\Documents\Visual Studio 2015\Projects\IT420_MAGDADARO\bin\x86\Debug\WindowsFormsApplication2.exe
+C:\Users\MichaelMaur\Documents\Visual Studio 2015\Projects\IT420_MAGDADARO\bin\x86\Debug\WindowsFormsApplication2.pdb
+C:\Users\MichaelMaur\Documents\Visual Studio 2015\Projects\IT420_MAGDADARO\obj\x86\Debug\WindowsFormsApplication2.RemittanceUpdate.resources
+C:\Users\MichaelMaur\Documents\Visual Studio 2015\Projects\IT420_MAGDADARO\obj\x86\Debug\WindowsFormsApplication2.RemittanceEntry.resources
+C:\Users\MichaelMaur\Documents\Visual Studio 2015\Projects\IT420_MAGDADARO\obj\x86\Debug\WindowsFormsApplication2.Properties.Resources.resources
+C:\Users\MichaelMaur\Documents\Visual Studio 2015\Projects\IT420_MAGDADARO\obj\x86\Debug\WelJanne Pharma.csproj.GenerateResource.Cache
+C:\Users\MichaelMaur\Documents\Visual Studio 2015\Projects\IT420_MAGDADARO\obj\x86\Debug\WindowsFormsApplication2.exe
+C:\Users\MichaelMaur\Documents\Visual Studio 2015\Projects\IT420_MAGDADARO\obj\x86\Debug\WindowsFormsApplication2.pdb

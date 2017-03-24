@@ -1,0 +1,1329 @@
+﻿/* Always check for empty fields first
+ * Then chek if they are valid
+ * If no errors, display */
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.OleDb;
+
+namespace WindowsFormsApplication2
+{
+    public partial class RemittanceEntry : Form
+    {
+
+        public static string connection = @"Provider=Microsoft.ACE.OLEDB.12.0;Data Source=C:\Users\Michael Maur\Documents\Visual Studio 2013\Projects\WindowsFormsApplication2\CapstoneDatabase.accdb";
+        OleDbConnection DBConnection = new OleDbConnection(connection);
+
+        string returnNo;
+        string remittanceNo;
+        string apprEmpNo;
+
+        int indexer = 0;
+        int rowDuplicate = 0;
+        double bonus = 0;
+        double genericSales = 0;
+        double brandedSales = 0;
+        double genericCom = 0;
+        double brandedCom = 0;
+        double expectedSale = 0;
+        double totalAmountRemit = 0;
+        double totalNetSales = 0;
+        double totalComission = 0;
+        double totalBalance = 0;
+
+        public RemittanceEntry()
+        {
+            InitializeComponent();
+        }
+
+        private void remittanceEntryToolStripMenuItem_Click(object sender, EventArgs e)
+        {         
+            this.Hide();
+            RemittanceEntry RemittanceEntryForm = new RemittanceEntry();
+            RemittanceEntryForm.Show();
+           
+        }
+
+        private void remittanceUpdateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            RemittanceUpdate RemittanceUpdateForm = new RemittanceUpdate();
+            RemittanceUpdateForm.Show();       
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DBConnection.Close();
+            this.Close();
+        }
+
+        private void saveToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Save();
+        }
+
+        private void clearToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            clearAll();
+        }
+        private void txtReturnNo_KeyPress_1(object sender, KeyPressEventArgs e){
+
+            if (e.KeyChar == (char)Keys.Enter){
+                returnNo = txtReturnNo.Text.ToUpper().Trim();
+                checkReturnNo(returnNo);
+            }
+        }
+        public void checkReturnNo(string returnNo)
+        {
+
+            //EMPTY FIELD
+            if (String.IsNullOrEmpty(returnNo))
+            {
+                MessageBox.Show("Please enter the Return Number the box Provided", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                txtReturnNo.Clear();
+            }
+            //NOT EMPTY
+            else if (!String.IsNullOrEmpty(returnNo))
+            {
+                //CHECK FOR SPECIAL CHARACTERS
+                if (checkSpecialChar(returnNo))
+                {
+                    MessageBox.Show("Please enter a Return No. without any special characters", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    txtReturnNo.Clear();
+                }
+                else
+                {
+
+                    DBConnection.Open();
+
+                  
+                                //    empNo = RetHeadReader.GetValue(3).ToString().ToUpper().Trim();
+
+                                    checkReturnHeader(returnNo);
+
+                    //                //CHECK RETURNDETAIL IF RETURN NUMBER IS USED
+                    //                string commandRetDetail = "Select * from RETURNDETAILFILE WHERE RETDETTRANSNO='" + returnNo + "'";
+                    //                OleDbCommand cmdRetDetail = new OleDbCommand(commandRetDetail, DBConnection);
+                    //                OleDbDataReader RetDetailReader = cmdRetDetail.ExecuteReader();
+
+                    //                while (RetDetailReader.Read())
+                    //                {
+                    //                    retDeFlag = false;
+                    //                    if (RetDetailReader.GetValue(6).ToString().ToUpper().Trim().Equals("OP"))
+                    //                    {
+
+                    //                        if (RetDetailReader.GetValue(3) == DBNull.Value || int.Parse(RetDetailReader.GetValue(3).ToString()) <= 0)
+                    //                        {
+                    //                            txtReturnNo.Clear();
+                    //                            MessageBox.Show("Drug quantity dispensed is invalid", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //                            break;
+                    //                        }
+                    //                        else if (RetDetailReader.GetValue(4) == DBNull.Value || RetDetailReader.GetValue(5) == DBNull.Value)
+                    //                        {
+                    //                            txtReturnNo.Clear();
+                    //                            MessageBox.Show("Drug quantity returned or Drugquantity sold is missing", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //                            break;
+                    //                        }
+                    //                        //IF QTY !=QTYSOLD + QTYRETURN
+                    //                        else if (double.Parse(RetDetailReader.GetValue(3).ToString()) != double.Parse(RetDetailReader.GetValue(4).ToString()) + double.Parse(RetDetailReader.GetValue(5).ToString()))
+                    //                        {
+                    //                            txtReturnNo.Clear();
+                    //                            MessageBox.Show("Drug quantity sold and quantity returned is not equal to the quantity dispensed", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //                            break;
+                    //                        }
+                    //                        else
+                    //                        {
+                    //                            qtyOut = qtyOut + int.Parse(RetDetailReader.GetValue(3).ToString());
+                    //                            qtyReturn = qtyReturn + int.Parse(RetDetailReader.GetValue(4).ToString());
+                    //                            qtySold = qtySold + int.Parse(RetDetailReader.GetValue(5).ToString());
+                    //                        }
+
+                    //                    }// IF RETURN DETAIL IS OPEN
+                    //                    else if (RetDetailReader.GetValue(6).ToString().ToUpper().Trim().Equals("CL"))
+                    //                    {
+                    //                        txtReturnNo.Clear();
+                    //                        allokay = false;
+                    //                        MessageBox.Show("Return detail transaction has already been remitted ", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //                        break;
+                    //                    }
+                    //                    else
+                    //                    {
+                    //                        txtReturnNo.Clear();
+                    //                        allokay = false;
+                    //                        MessageBox.Show("The status of return detail cannot be identified", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //                        break;
+                    //                    }
+                    //                }//WHILE RETURNDETAIL 
+                    //                if (retDeFlag)
+                    //                {
+                    //                    txtReturnNo.Clear();
+                    //                    txtReturnNo.Focus();
+                    //                    MessageBox.Show("The return detail records cannot be retrieved. It might have been deleted", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //                    break;
+                    //                }
+
+                    //                if (qtyOut == int.Parse(RetHeadReader.GetValue(4).ToString()) && qtyReturn == int.Parse(RetHeadReader.GetValue(5).ToString()) && qtySold == int.Parse(RetHeadReader.GetValue(9).ToString()))
+                    //                    allokay = true;
+                    //                else
+                    //                    allokay = false;
+                    //                if (allokay)
+                    //                {
+                    //                   
+                    //                }
+                    //                else if (!allokay)
+                    //                {
+                    //                    if (qtyOut != int.Parse(RetHeadReader.GetValue(4).ToString()))
+                    //                    {
+                    //                        txtReturnNo.Clear();
+                    //                        MessageBox.Show("Please perform return transaction first. Quantity dispensed is the headerfile is not equal to the detailfile", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //                    }
+                    //                    else if (qtyReturn != int.Parse(RetHeadReader.GetValue(5).ToString()))
+                    //                    {
+                    //                        txtReturnNo.Clear();
+                    //                        MessageBox.Show("Please perform return transaction first. Quantity returned is the headerfile is not equal to the detailfile", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //                    }
+                    //                    else if (qtySold != int.Parse(RetHeadReader.GetValue(9).ToString()))
+                    //                    {
+                    //                        txtReturnNo.Clear();
+                    //                        MessageBox.Show("Please perform return transaction first. Quantity sold is the headerfile is not equal to the detailfile", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //                    }
+                    //                }
+                    //                else
+                    //                {
+                    //                    txtReturnNo.Clear();
+                    //                    MessageBox.Show("The status of this dispense transaction cannot be indentified", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //                }
+
+                    //            }//IF RETHEADQTYOUT || RETHEADQTYRET || RETHEADQTYSOLD 
+                    //        }//IF DISPENSESTATUS = OP
+                    //        else if (RetHeadReader.GetValue(10).ToString().ToUpper().Trim().Equals("CL"))
+                    //        {
+                    //            txtReturnNo.Clear();                                
+                    //            MessageBox.Show("Return transaction has already been remitted ", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    //        }
+                    //        else
+                    //        {
+                    //            txtReturnNo.Clear();
+                    //            MessageBox.Show("The status of this return transaction cannot be indentified", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    //        }
+                    //    } //IF RETURN NO IS FOUND         
+                    //}// WHILE RETURNHEADER
+
+                     
+
+                    
+
+                    DBConnection.Close();
+                }
+            }
+        }
+
+        private void dateTimePicker1_ValueChanged(object sender, EventArgs e)
+        {
+            DatePickerCheck();
+        }
+        public void DatePickerCheck()
+        {
+            Boolean checkDateFlag = false;
+
+            // condition to check if the date selected by the user is not  the Date Today
+            if (dateTimePicker1.Value < DateTime.Now || dateTimePicker1.Value > DateTime.Now)
+                checkDateFlag = true;
+
+
+            if (checkDateFlag)
+            {
+                dateTimePicker1.Value = DateTime.Now;
+                MessageBox.Show("Please choose the current date", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+
+        }
+
+        private void txtRemittanceNo_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Enter)
+            {
+               remittanceNo = txtRemittanceNo.Text.ToUpper().Trim();
+               checkRemittanceNo(remittanceNo);
+            }
+        }
+
+        public void checkRemittanceNo(string remittanceNo)
+        {
+
+            Boolean remNoFlag = false;
+            Boolean remDetFlag = false;
+
+            // if textbox is empty
+            if (String.IsNullOrEmpty(remittanceNo))
+            {
+                MessageBox.Show("Please enter the Remittance Number the box Provided", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+            // if textbox is not empty
+            else if (!String.IsNullOrEmpty(remittanceNo))
+            {
+                //check for special characters
+                if (checkSpecialChar(remittanceNo))
+                {
+                    MessageBox.Show("Please enter a Remittance No. without any special characters", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    txtRemittanceNo.Clear();
+                    txtRemittanceNo.Focus();
+                }
+                else
+                {
+                    DBConnection.Open();
+                    string commandRem = "Select * from REMITTANCEHEADERFILE WHERE REMHEADTRANSNO='" + remittanceNo + "'";
+                    OleDbCommand cmdRem = new OleDbCommand(commandRem, DBConnection);
+                    OleDbDataReader RemReader = cmdRem.ExecuteReader();
+
+                    while (RemReader.Read())
+                    {
+                            remNoFlag = true;
+         
+                    }
+
+                    //CHECK IF REMITTANCE NUMBER IS IN DETAIL
+                    string commandRemDe = "Select * from REMITTANCEDETAILFILE WHERE REMDETTRANSNO='" + remittanceNo + "'";
+                    OleDbCommand cmdRemDe = new OleDbCommand(commandRemDe, DBConnection);
+                    OleDbDataReader RemDeReader = cmdRemDe.ExecuteReader();
+
+                    while (RemDeReader.Read())
+                    {
+                        if (RemDeReader.GetValue(0).ToString().ToUpper().Trim().Equals(remittanceNo))
+                            remDetFlag = true;
+                    }
+
+                    DBConnection.Close();
+
+                    //ERROR CHECKING
+                    if (remNoFlag || remDetFlag)
+                        MessageBox.Show("Remittance Number is already used", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    else
+                        txtDrugCode.Focus();
+                }
+            }
+            
+        }
+              
+        private void txtDrugCode_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Enter)
+            {
+                string drugCode = txtDrugCode.Text.ToUpper().Trim();
+                checkDrugCode(drugCode);
+            }
+        }
+
+        public void checkDrugCode(string drugCode)
+        {
+
+            Boolean drugCodeFlag = true;
+            Boolean retDetailFlag = true;
+
+            double retailPrice = 0;
+            int qtySold = 0;
+            Boolean aflag = false;
+
+            // if textbox is empty
+            if (String.IsNullOrEmpty(drugCode))
+            {
+                MessageBox.Show("Please enter the Drug Code in the box Provided", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                txtDrugCode.Clear();
+                txtDrugCode.Focus();
+            }
+            //user has not yet entered the return no
+            else if (String.IsNullOrEmpty(returnNo))
+            {
+                MessageBox.Show("Please enter the Return No. in the box Provided", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                txtReturnNo.Focus();
+                txtDrugCode.Clear();
+            }
+            // if textbox is not empty
+            else if (!String.IsNullOrEmpty(drugCode))
+            {
+                //check for special characters
+                if (checkSpecialChar(drugCode))
+                {
+                    MessageBox.Show("Please enter a Drug Code without any special characters", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    txtDrugCode.Clear();
+                    txtDrugCode.Focus();
+                }
+                else if (indexer != 0 && dataGridView1.Rows[indexer].Cells[0].Value != null && dataGridView1.Rows[indexer].Cells[6].Value == null)
+                {
+                    MessageBox.Show("Please remittance amount first", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    txtRemAmount.Focus();
+                }
+                else
+                {
+                    if (checkDuplicate(drugCode))
+                    {
+
+                        DialogResult dr = MessageBox.Show("Drug code is in the flexgrid, Do you want to remove?", "Missing information", MessageBoxButtons.YesNo, MessageBoxIcon.Exclamation);
+                        if (dr == DialogResult.Yes)
+                        {
+
+                            string checkDrugType = "";
+                            double amount = 0;
+
+                            genericSales = 0;
+                            brandedSales = 0;
+                            expectedSale = 0;
+                            totalAmountRemit = 0;
+                            genericCom = 0;
+                            brandedCom = 0;
+                            totalNetSales = 0;
+                            totalComission = 0;
+                            totalBalance = 0;
+
+                            //ADD REMOVE COMISSION AND ALL
+
+                            dataGridView1.Rows.RemoveAt(rowDuplicate);
+                            indexer = indexer - 1;
+
+                            for (int x = 0; x < dataGridView1.Rows.Count - 1; x++)
+                            {
+                                checkDrugType = dataGridView1.Rows[x].Cells[2].Value.ToString().ToUpper().Trim();
+                                amount = double.Parse(dataGridView1.Rows[x].Cells[6].Value.ToString().ToUpper().Trim());
+
+                                if (checkDrugType.Equals("BRANDED"))
+                                {
+                                    brandedSales = brandedSales + amount;
+                                    brandedCom = (brandedSales * .70);
+                                }
+                                else if (checkDrugType.Equals("GENERIC"))
+                                {
+                                    genericSales = genericSales + amount;
+                                    genericCom = (genericSales * .50);
+                                }
+                                totalAmountRemit = totalAmountRemit + amount;
+                                expectedSale = expectedSale + amount;
+
+                                totalNetSales = totalAmountRemit - (genericCom + brandedCom);
+                                totalComission = genericCom + brandedCom;
+                            }
+
+                            totalNetSales = totalAmountRemit - (genericCom + brandedCom + bonus);
+                            totalComission = genericCom + brandedCom + bonus;
+
+                            lblExpectedAmt.Text = expectedSale + "";
+                            lblTotalRemAmt.Text = totalAmountRemit + "";
+
+                            lblGenSales.Text = genericSales + "";
+                            lblBrandedSales.Text = brandedSales + "";
+                            lblBrandedCom.Text = brandedCom + "";
+                            lblGenCom.Text = genericCom + "";
+                            lblNetSales.Text = totalNetSales + "";
+                            lblTotalCom.Text = totalComission + "";
+
+                        }
+
+                        if (dr == DialogResult.No)
+                        {
+                            txtDrugCode.Clear();
+                            txtDrugCode.Focus();
+                        }
+
+                    }
+                    else
+                    {
+                        DBConnection.Open();
+                        string commandDrug = "Select * from DRUGINVENTORYHEADERFILE WHERE DRUGHEADCODE='" + drugCode + "'";
+                        OleDbCommand cmdDrug = new OleDbCommand(commandDrug, DBConnection);
+                        OleDbDataReader DrugReader = cmdDrug.ExecuteReader();
+
+                        while (DrugReader.Read())
+                        {
+                            drugCodeFlag = false;
+                            //CHECK IF THERE IS UNIT PRICE AND RETAIL PRICE 
+                            if (DrugReader.GetValue(5) == DBNull.Value || double.Parse(DrugReader.GetValue(5).ToString().Trim()) <= 0 ||DrugReader.GetValue(6) == DBNull.Value || double.Parse(DrugReader.GetValue(6).ToString().Trim()) <= 0 )
+                            {
+                                txtDrugCode.Clear();
+                                txtDrugCode.Focus();
+                                MessageBox.Show("Drug has no price in record ", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                break;
+                            }
+                            else if (DrugReader.GetValue(2).ToString().Trim().Equals("") || DrugReader.GetValue(7).ToString().Trim().Equals(""))
+                            {
+                                txtDrugCode.Clear();
+                                txtDrugCode.Focus();
+                                MessageBox.Show("Drug name or Drug type is missing", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                break;
+                            }
+                            else if (!DrugReader.GetValue(7).ToString().Trim().Equals("BRANDED") && !DrugReader.GetValue(7).ToString().Trim().Equals("GENERIC"))
+                            {
+                                txtDrugCode.Clear();
+                                txtDrugCode.Focus();
+                                MessageBox.Show("Drug type is invalid", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                break;
+                            }
+                            else
+                            {
+                            
+                                //check remittance header for the same return no, check return, then check remittancedetail
+                                string commandRemHead = "Select * from REMITTANCEHEADERFILE WHERE REMHEADRETNO='" + returnNo + "'";
+                                OleDbCommand cmdRemHead = new OleDbCommand(commandRemHead, DBConnection);
+                                OleDbDataReader RemHeadReader = cmdRemHead.ExecuteReader();
+
+                                while (RemHeadReader.Read())
+                                {
+                                    string remHeadNo = RemHeadReader.GetValue(0).ToString().ToUpper().Trim();
+
+                                    string commandRemDetail = "Select * from REMITTANCEDETAILFILE WHERE REMDETTRANSNO='" + remHeadNo + "' And REMDETDRUGCODE='" + drugCode + " ' ";
+                                    OleDbCommand cmdRemDetail = new OleDbCommand(commandRemDetail, DBConnection);
+                                    OleDbDataReader RemDetailReader = cmdRemDetail.ExecuteReader();
+
+                                    while (RemDetailReader.Read())
+                                    {
+                                        aflag = true;
+                                        txtDrugCode.Clear();
+                                        txtDrugCode.Focus();
+                                        MessageBox.Show("Drug code already remitted in other remittance file", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                        break;
+
+                                    }
+                                    if (aflag)
+                                        break;
+                                }
+
+                                if (!aflag)
+                                {
+                                    string commandReturn = "Select * from RETURNDETAILFILE WHERE RETDETTRANSNO='" + returnNo + "'And RETDETDRUGCODE='" + drugCode + "'";
+                                    OleDbCommand cmdRet = new OleDbCommand(commandReturn, DBConnection);
+                                    OleDbDataReader RetReader = cmdRet.ExecuteReader();
+
+                                    while (RetReader.Read())
+                                    {
+                                        retDetailFlag = false;
+                                        //if QTYDISPENSE= 0
+                                        if (RetReader.GetValue(3) == DBNull.Value || int.Parse(RetReader.GetValue(3).ToString()) <= 0)
+                                        {
+                                            txtDrugCode.Clear();
+                                            MessageBox.Show("Drug quantity dispensed is invalid", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                            break;
+                                        }// QTYSOLD AND QTYRETURN
+                                        else if (RetReader.GetValue(4) == DBNull.Value || RetReader.GetValue(5) == DBNull.Value) 
+                                        {
+                                            txtDrugCode.Clear();
+                                            MessageBox.Show("Drug quantity returned or Drugquantity sold is missing", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                            break;
+                                        }
+                                        //IF QTY !=QTYSOLD + QTYRETURN
+                                        else if (double.Parse(RetReader.GetValue(3).ToString()) != double.Parse(RetReader.GetValue(4).ToString()) + double.Parse(RetReader.GetValue(5).ToString()))
+                                        {
+                                            MessageBox.Show("Drug quantity sold and quantity returned is not equal to the quantity dispensed", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                            txtDrugCode.Clear();
+                                            break;
+                                        }
+                                        //ELSE
+                                        else
+                                        {
+                                            dataGridView1.Rows.Add();
+                                            qtySold = int.Parse(RetReader.GetValue(5).ToString().ToUpper().Trim());
+                                            retailPrice = double.Parse(DrugReader.GetValue(5).ToString().ToUpper().Trim());
+                                            dataGridView1.Rows[indexer].Cells[0].Value = DrugReader.GetValue(0).ToString().ToUpper().Trim();
+                                            dataGridView1.Rows[indexer].Cells[1].Value = DrugReader.GetValue(2).ToString().ToUpper().Trim();
+                                            dataGridView1.Rows[indexer].Cells[2].Value = DrugReader.GetValue(7).ToString().ToUpper().Trim();
+                                            dataGridView1.Rows[indexer].Cells[3].Value = RetReader.GetValue(5).ToString().ToUpper().Trim();
+                                            dataGridView1.Rows[indexer].Cells[4].Value = DrugReader.GetValue(5).ToString().ToUpper().Trim();
+                                            dataGridView1.Rows[indexer].Cells[5].Value = qtySold * retailPrice;
+                                            txtRemAmount.Focus();
+                                            break;
+                                        }
+                                    }//END WHILE                                   
+                                    //ERROR CHECKING
+                                    if (retDetailFlag)
+                                    {
+                                        txtDrugCode.Clear();
+                                        txtDrugCode.Focus();
+                                        MessageBox.Show("Drug Code is not on Return File", "Error", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                                    }
+
+                                }
+                            }
+
+                        }//while DRUGCODE      
+
+                        DBConnection.Close();
+                        if (drugCodeFlag)
+                        {
+                            txtDrugCode.Clear();
+                            txtDrugCode.Focus();
+                            MessageBox.Show("Drug Code not found ", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+
+
+
+
+                }//else
+
+            }
+        }
+        private void txtRemAmount_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Enter)
+            {
+                string remAmount = txtRemAmount.Text.ToUpper().Trim();
+                checkRemAmount(remAmount);
+            }
+        }
+
+        public void checkRemAmount(String remAmount)
+        {
+
+            Boolean drugCodeEmptyFlag = false;
+            string checkDrugType;
+            double tempSale = 0;
+
+            double dOutput = 0;
+            if (Double.TryParse(remAmount, out dOutput))
+            {
+                // if textbox is empty
+                if (String.IsNullOrEmpty(remAmount))
+                {
+                    MessageBox.Show("Please enter the Quantity on the Box provided", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                if (String.IsNullOrEmpty(txtDrugCode.Text))
+                {
+                    txtRemAmount.Clear();
+                    txtDrugCode.Focus();
+                    MessageBox.Show("Please enter the drug code", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                //user has not yet entered the return no
+                else if (String.IsNullOrEmpty(returnNo))
+                {
+                    MessageBox.Show("Please enter the Return No. in the box Provided", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    txtReturnNo.Focus();
+                    txtRemAmount.Clear();
+                }
+                else if (double.Parse(remAmount) <=0)
+                {
+                    MessageBox.Show("Please enter a Quantity that is more than Zero", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    txtRemAmount.Clear();
+                    txtRemAmount.Focus();
+                }
+                // if textbox is not empty
+                else if (!String.IsNullOrEmpty(remAmount))
+                {
+                    if (dataGridView1.Rows[indexer].Cells[0].Value == null)
+                    {
+                        drugCodeEmptyFlag = true;
+                    }
+                    else if (dataGridView1.Rows[indexer].Cells[0].Value != null)
+                    {
+                        dataGridView1.Rows[indexer].Cells[6].Value = remAmount;
+
+                        checkDrugType = dataGridView1.Rows[indexer].Cells[2].Value.ToString().ToUpper().Trim();
+                        tempSale = double.Parse(dataGridView1.Rows[indexer].Cells[5].Value.ToString().ToUpper().Trim());
+
+                        if (checkDrugType.Equals("BRANDED"))
+                        {
+                            brandedSales = brandedSales + tempSale;
+                            brandedCom = (brandedSales * .70);
+                        }
+                        else if (checkDrugType.Equals("GENERIC"))
+                        {
+                            genericSales = genericSales + tempSale;
+                            genericCom = (genericSales * .50);
+                        }
+
+
+                        //compute the bonus once
+                        if (lblBonus.Text.Trim() == "")
+                        {
+                            //bonus = calculateBonus(empNo);
+                            lblBonus.Text = bonus + "";
+                        }
+                        //ALREADY OKAY
+                        totalAmountRemit = totalAmountRemit + double.Parse(remAmount);
+                        expectedSale = expectedSale + tempSale;
+                        lblExpectedAmt.Text = expectedSale + "";
+                        lblTotalRemAmt.Text = totalAmountRemit + "";
+
+
+                        totalNetSales = totalAmountRemit - (genericCom + brandedCom + bonus);
+                        totalComission = genericCom + brandedCom + bonus;
+                        
+                        indexer = indexer + 1;
+                        
+
+                        DBConnection.Close();
+
+                        lblGenSales.Text = genericSales + "";
+                        lblBrandedSales.Text = brandedSales + "";
+                        lblBrandedCom.Text = brandedCom + "";
+                        lblGenCom.Text = genericCom + "";
+                        lblNetSales.Text = totalNetSales + "";
+                        lblTotalCom.Text = totalComission + "";
+
+
+                        txtDrugCode.Clear();
+                        txtRemAmount.Clear();
+                        txtDrugCode.Focus();
+
+                        if (drugCodeEmptyFlag)
+                        {
+                            txtRemAmount.Clear();
+                            txtDrugCode.Focus();
+                            MessageBox.Show("Please enter the specific Drug Code first", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                         }
+
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Input a valid numeric number", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }         
+        }
+
+        private void txtRemarks_KeyPress(object sender, KeyPressEventArgs e)
+        {
+             if (e.KeyChar == (char)Keys.Enter)
+            {
+                string remarks = txtRemarks.Text.ToUpper().Trim();
+                checkRemarks(remarks);
+            }
+        }
+
+        private void txtApprEmpCode_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Enter)
+            {
+                apprEmpNo = txtApprEmpCode.Text.ToUpper().Trim();
+                checkApprEmp(apprEmpNo);
+            }
+        }
+
+        public void checkApprEmp(string apprEmpNo)
+        {
+            Boolean empApprFlag = true;
+
+            // if textbox is empty
+            if (String.IsNullOrEmpty(apprEmpNo))
+            {
+                MessageBox.Show("Please enter the Return Number the box Provided", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+                txtApprEmpCode.Clear();
+                txtApprEmpCode.Focus();
+            }
+            // if textbox is not empty
+            else if (!String.IsNullOrEmpty(apprEmpNo))
+            {
+                //check for special characters
+                if (checkSpecialChar(apprEmpNo))
+                {
+                    MessageBox.Show("Please enter a Employee No. without any special characters", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    txtApprEmpCode.Clear();
+                    txtApprEmpCode.Focus();
+                }
+                else
+                {
+                      DBConnection.Open();
+
+                        string commandEmp = "Select * from EMPLOYEEFILE WHERE EMPNO='" + apprEmpNo + "'";
+                         OleDbCommand cmdEmp = new OleDbCommand(commandEmp, DBConnection);
+                         OleDbDataReader EmpReader = cmdEmp.ExecuteReader();
+
+                         while (EmpReader.Read())
+                         {
+                             empApprFlag = false;
+
+                             if (EmpReader.GetValue(9).ToString().ToUpper().Trim().Equals("AC"))
+                             {
+                                 DateTime Hiredate = DateTime.Parse(EmpReader.GetValue(7).ToString());
+
+                                 //HIREDATE IS GREATER THAN CURRENT DATE
+                                 if (Hiredate > DateTime.Now)
+                                 {
+                                     txtApprEmpCode.Clear();
+                                     MessageBox.Show("Employee's hiredate is recent that this transaction", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                 }
+                                 else
+                                 {
+                                     int empRights = int.Parse(EmpReader.GetValue(8).ToString());
+                                     string empPos = EmpReader.GetValue(5).ToString();
+
+                                     //IF EMPLOYEE IS AN AGENT
+                                     if (empRights == 1 && empPos.ToUpper().Equals("OWNER") || empRights == 2 && empPos.ToUpper().Equals("MANAGER"))
+                                     {
+                                         if (EmpReader.GetValue(1).ToString().ToUpper().Trim().Equals("") || EmpReader.GetValue(2).ToString().ToUpper().Trim().Equals("") || EmpReader.GetValue(3).ToString().ToUpper().Trim().Equals(""))
+                                         {
+                                             txtApprEmpCode.Clear();
+                                             MessageBox.Show("The employee name cannot be retreived. It might have been deleted", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                         }
+                                         else if (!EmpReader.GetValue(1).ToString().ToUpper().Trim().Equals("") || !EmpReader.GetValue(2).ToString().ToUpper().Trim().Equals("") || !EmpReader.GetValue(3).ToString().ToUpper().Trim().Equals(""))
+                                         {
+                                             
+                                             lblApprvByName.Text = EmpReader.GetValue(1).ToString().ToUpper().Trim() + " " + EmpReader.GetValue(3).ToString().ToUpper().Trim() + ". " + EmpReader.GetValue(2).ToString().ToUpper().Trim();
+                                             txtRemarks.Focus();
+                                         }
+                                     }//IF EMP RIGHTS AND POS
+                                     else
+                                     {
+                                         txtApprEmpCode.Clear();
+                                         MessageBox.Show("Employee is not authorized to process this transaction.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                     }
+                                 }//ELSE EMP VALID HIREDATE
+                             }//ELSE EMP ACTIVE
+                             else if (EmpReader.GetValue(9).ToString().ToUpper().Trim().Equals("IN"))
+                             {
+                                 txtApprEmpCode.Clear();
+                                 MessageBox.Show("Employee is currently inactive", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                             }
+                             else
+                             {
+                                 txtApprEmpCode.Clear();
+                                 MessageBox.Show("Employee status cannot be retrieved, ", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                             }
+                         }//WHILE EMP
+
+                         if (empApprFlag)
+                         {
+                             txtApprEmpCode.Clear();
+                             MessageBox.Show("Employee Record is not found", "Error",MessageBoxButtons.OK, MessageBoxIcon.Error);
+                         }
+                     }
+
+                    DBConnection.Close();
+
+                   
+                
+            }
+        }
+
+        public void checkRemarks(string remarks)
+        {
+         // if textbox is empty
+            if (String.IsNullOrEmpty(remarks))
+            {
+                txtRemarks.Clear();
+                txtRemarks.Focus();
+                MessageBox.Show("Please provide remarks for easy understandability and for future use", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                
+            }
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            Save();
+        }
+
+        public void Save() 
+        {
+            //ADD CHECK TO TEXTFIELDS
+            if (returnNo != txtReturnNo.Text.ToUpper().Trim() || returnNo.Trim().Equals(""))
+            {
+                checkReturnNo(returnNo);
+            }
+            else if (remittanceNo != txtRemittanceNo.Text.ToUpper().Trim() || remittanceNo.Trim().Equals(""))
+            {
+                checkRemittanceNo(remittanceNo);
+            }
+
+            else
+            {
+                string tempExpectedSale;
+                string tempAmountRem;
+
+                //SAVE REMITTANCE HEADER
+                DBConnection.Open();
+                String sqlRemHeader = "Select * from REMITTANCEHEADERFILE WHERE REMHEADTRANSNO='" + remittanceNo + "'";
+                OleDbDataAdapter thisAdapterRemHeader = new OleDbDataAdapter(sqlRemHeader, connection);
+                OleDbCommandBuilder cmdBuilderRemHeader = new OleDbCommandBuilder(thisAdapterRemHeader);
+
+                DataSet thisDataSetRemHeader = new DataSet();
+
+                thisAdapterRemHeader.Fill(thisDataSetRemHeader, "REMITTANCEHEADERFILE");
+
+                //SET THE PRIMAREY KEYS
+                DataColumn[] keysRemHeader = new DataColumn[2];
+                keysRemHeader[0] = thisDataSetRemHeader.Tables["REMITTANCEHEADERFILE"].Columns["REMHEADTRANSNO"];
+                keysRemHeader[1] = thisDataSetRemHeader.Tables["REMITTANCEHEADERFILE"].Columns["REMHEADRETNO"];
+
+                //LET THE DataSet RECOGNIZE THE KEYS
+                thisDataSetRemHeader.Tables["REMITTANCEHEADERFILE"].PrimaryKey = keysRemHeader;
+
+                String[] searchValueRemHeader = new String[2];
+                searchValueRemHeader[0] = remittanceNo;
+                searchValueRemHeader[1] = returnNo;
+
+                DataRow findRowRemHeader = thisDataSetRemHeader.Tables["REMITTANCEHEADERFILE"].Rows.Find(searchValueRemHeader);
+
+                if (findRowRemHeader == null)
+                {
+
+                    totalBalance = expectedSale - totalAmountRemit;
+                    
+
+                    DataRow thisRemHeaderRow = thisDataSetRemHeader.Tables["REMITTANCEHEADERFILE"].NewRow();
+                    thisRemHeaderRow[0] = remittanceNo;
+                    thisRemHeaderRow[1] = returnNo;
+                    thisRemHeaderRow[2] = lblEmpNo.Text.ToString().ToUpper().Trim();
+                    thisRemHeaderRow[3] = dateTimePicker1.Value.ToShortDateString();
+                    thisRemHeaderRow[4] = totalAmountRemit;
+                    thisRemHeaderRow[5] = brandedSales;
+                    thisRemHeaderRow[6] = genericSales;
+                    thisRemHeaderRow[7] = totalComission;
+                    thisRemHeaderRow[8] = expectedSale;
+                    thisRemHeaderRow[9] = totalNetSales;
+                    thisRemHeaderRow[10] = totalBalance;
+                    thisRemHeaderRow[11] = apprEmpNo;
+                    thisRemHeaderRow[13] = txtRemarks.Text.ToString().ToUpper();
+                    thisRemHeaderRow[14] = "OP";
+
+                    thisDataSetRemHeader.Tables["REMITTANCEHEADERFILE"].Rows.Add(thisRemHeaderRow);
+
+                }
+                thisAdapterRemHeader.Update(thisDataSetRemHeader, "REMITTANCEHEADERFILE");
+                thisAdapterRemHeader.AcceptChangesDuringUpdate = true;
+                DBConnection.Close();
+
+                //SAVE REMITTANCEDETAIL
+                DBConnection.Open();
+                String sqlRemDetail = "Select * from REMITTANCEDETAILFILE WHERE REMDETTRANSNO='" + remittanceNo + "'";
+                OleDbDataAdapter thisAdapterRemDetail = new OleDbDataAdapter(sqlRemDetail, connection);
+                OleDbCommandBuilder cmdBuilderRemDetail = new OleDbCommandBuilder(thisAdapterRemDetail);
+
+                DataSet thisDataSetRemDetail = new DataSet();
+
+                thisAdapterRemDetail.Fill(thisDataSetRemDetail, "REMITTANCEDETAILFILE");
+
+                //SET THE PRIMAREY KEYS
+                DataColumn[] keysRemDetail = new DataColumn[2];
+                keysRemDetail[0] = thisDataSetRemDetail.Tables["REMITTANCEDETAILFILE"].Columns["REMDETTRANSNO"];
+                keysRemDetail[1] = thisDataSetRemDetail.Tables["REMITTANCEDETAILFILE"].Columns["REMDETDRUGCODE"];
+               
+                //LET THE DataSet RECOGNIZE THE KEYS
+                thisDataSetRemDetail.Tables["REMITTANCEDETAILFILE"].PrimaryKey = keysRemDetail;
+                
+                for (int n = 0; n < dataGridView1.Rows.Count - 1; n++)
+                {
+                    string drgCode = dataGridView1.Rows[n].Cells[0].Value.ToString().ToUpper().Trim();
+                    String[] searchValueRemDetail = new String[2];
+                    searchValueRemDetail[0] = remittanceNo;
+                    searchValueRemDetail[1] = drgCode;
+                    DataRow findRowRemDetail = thisDataSetRemDetail.Tables["REMITTANCEDETAILFILE"].Rows.Find(searchValueRemDetail);
+
+                    if (findRowRemDetail == null)
+                    {
+                        
+                        DataRow thisDetailRemRow = thisDataSetRemDetail.Tables["REMITTANCEDETAILFILE"].NewRow();
+
+                        tempExpectedSale = dataGridView1.Rows[n].Cells[5].Value.ToString().ToUpper().Trim();
+                        tempAmountRem = dataGridView1.Rows[n].Cells[6].Value.ToString().ToUpper().Trim();
+
+                        thisDetailRemRow[0] = remittanceNo;
+                        thisDetailRemRow[1] = dataGridView1.Rows[n].Cells[0].Value.ToString().ToUpper().Trim();
+                        thisDetailRemRow[2] = Convert.ToDouble(dataGridView1.Rows[n].Cells[5].Value);
+                        thisDetailRemRow[3] = Convert.ToDouble(dataGridView1.Rows[n].Cells[6].Value);
+                        thisDetailRemRow[4] = "OP";
+
+                        thisDataSetRemDetail.Tables["REMITTANCEDETAILFILE"].Rows.Add(thisDetailRemRow);
+                    }
+
+                    thisAdapterRemDetail.Update(thisDataSetRemDetail, "REMITTANCEDETAILFILE");
+                    thisAdapterRemDetail.AcceptChangesDuringUpdate = true;
+                    DBConnection.Close();
+                }
+
+
+                //UPDATE RETURNDETAIL
+                DBConnection.Open();
+
+                Boolean allClose = false;
+                             
+                    string commandRetDetail = "Select * from RETURNDETAILFILE WHERE RETDETTRANSNO='" + returnNo + "'";
+                    OleDbCommand cmdRetDetail = new OleDbCommand(commandRetDetail, DBConnection);
+                    OleDbDataReader RetDetailReader = cmdRetDetail.ExecuteReader();
+
+                    while (RetDetailReader.Read())
+                    {
+                        //check remittance header for the same return no, check return, then check remittancedetail
+                        string drugCode = RetDetailReader.GetValue(1).ToString().ToUpper().Trim();
+
+                        string commandRemHead = "Select * from REMITTANCEHEADERFILE WHERE REMHEADRETNO='" + returnNo + "'";
+                        OleDbCommand cmdRemHead = new OleDbCommand(commandRemHead, DBConnection);
+                        OleDbDataReader RemHeadReader = cmdRemHead.ExecuteReader();
+
+                        while (RemHeadReader.Read())
+                        {
+                            string commandRemDetail = "Select * from REMITTANCEDETAILFILE WHERE REMDETTRANSNO='" + RemHeadReader.GetValue(0).ToString().Trim() + "'And REMDETDRUGCODE='" + drugCode + "'";
+                            OleDbCommand cmdRemDetail = new OleDbCommand(commandRemDetail, DBConnection);
+                            OleDbDataReader RemDetailReader = cmdRemDetail.ExecuteReader();
+
+                            while (RemDetailReader.Read())
+                            {
+                                if (RetDetailReader.GetValue(3) == DBNull.Value || RetDetailReader.GetValue(3) == DBNull.Value || RetDetailReader.GetValue(3) == DBNull.Value)
+                                {
+                                    allClose = false;
+                                    break;
+                                }
+                                else if (double.Parse(RetDetailReader.GetValue(3).ToString()) == double.Parse(RetDetailReader.GetValue(4).ToString()) + double.Parse(RetDetailReader.GetValue(5).ToString()))
+                                {
+                                    if (RemDetailReader.GetValue(2) == DBNull.Value || RemDetailReader.GetValue(3) == DBNull.Value)
+                                    {
+                                        allClose = false;
+                                        break;
+                                    }
+                                    else if (int.Parse(RemDetailReader.GetValue(2).ToString()) == int.Parse(RemDetailReader.GetValue(3).ToString()))
+                                    {
+                                        //UPDATE HERE
+                                        allClose = true;
+
+                                    }
+                                }
+                            }//END REMDETAILFILE
+                        }//END REMHEADFILE
+                    }//END RETURNDETAILFILE
+
+
+                    //findrow[""].equals
+
+                    OleDbDataAdapter thisAdapterRetDetail = new OleDbDataAdapter(commandRetDetail, connection);
+                    OleDbCommandBuilder cmdBuilderRetDetail = new OleDbCommandBuilder(thisAdapterRemDetail);
+
+                    DataSet thisDataSetRetDetail = new DataSet();
+
+                    thisAdapterRemDetail.Fill(thisDataSetRemDetail, "REMITTANCEDETAILFILE");
+
+                    //SET THE PRIMAREY KEYS
+                    DataColumn[] keysRetDetail = new DataColumn[2];
+                    keysRemDetail[0] = thisDataSetRetDetail.Tables["REMITTANCEDETAILFILE"].Columns["REMDETTRANSNO"];
+                    keysRemDetail[1] = thisDataSetRetDetail.Tables["REMITTANCEDETAILFILE"].Columns["REMDETDRUGCODE"];
+
+                    //LET THE DataSet RECOGNIZE THE KEYS
+                    thisDataSetRemDetail.Tables["REMITTANCEDETAILFILE"].PrimaryKey = keysRemDetail;
+
+                    String druggCode = "DRG01";
+                    String[] searchValueRetDetail = new String[2];
+                    searchValueRetDetail[0] = remittanceNo;
+                    searchValueRetDetail[1] = druggCode;
+                    DataRow findRowRetDetail = thisDataSetRemDetail.Tables["REMITTANCEDETAILFILE"].Rows.Find(searchValueRetDetail);
+
+                    if (findRowRetDetail != null)
+                    {
+
+                    }
+
+                    thisAdapterRemDetail.Update(thisDataSetRemDetail, "REMITTANCEDETAILFILE");
+                    thisAdapterRemDetail.AcceptChangesDuringUpdate = true;
+                    DBConnection.Close();
+                                        
+
+
+
+                clearAll();
+                MessageBox.Show("Data successfully saved", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            clearAll();
+        }
+
+        public void clearAll()
+        {
+
+            returnNo = "";
+            remittanceNo = "";
+
+            bonus = 0;
+            indexer = 0;
+            genericSales = 0;
+            brandedSales = 0;
+            totalAmountRemit = 0;
+            genericCom = 0;
+            brandedCom = 0;
+            totalNetSales = 0;
+            totalComission = 0;
+
+            txtReturnNo.Clear();
+            txtRemittanceNo.Clear();
+            txtDrugCode.Clear();
+            txtRemAmount.Clear();
+            txtApprEmpCode.Clear();
+            txtRemarks.Clear();
+            lblApprvByName.Text = "";
+            lblBonus.Text = "";
+            lblBrandedCom.Text = "";
+            lblBrandedSales.Text = "";
+            lblEmpName.Text = "";
+            lblEmpNo.Text = "";
+            lblExpectedAmt.Text = "";
+            lblGenCom.Text = "";
+            lblGenSales.Text = "";
+            lblNetSales.Text = "";
+            lblTotalCom.Text = "";
+            lblTotalRemAmt.Text = "";
+            dataGridView1.Rows.Clear();
+        }
+
+        public Boolean checkSpecialChar(string check) { 
+        
+        Boolean flag = false;
+
+        // convert each character of the string value in the textbox to ASCII
+        byte[] ASCII = Encoding.ASCII.GetBytes(check);
+        //foreach loop to check each value 
+        foreach (byte b in ASCII)
+        {
+            //condition to check and filter for special characters entered
+            if (b < 48 || (b > 75 && b < 65) || (b > 90 && b < 97) || b > 122)
+                flag = true;
+        }
+
+        return flag;
+        }
+
+        public double calculateBonus(string empNo) {
+            
+            DateTime hireDate;
+            DateTime currentDate;
+            double yearsService=0;
+            
+
+            DBConnection.Open();
+            string command = "Select * from EMPLOYEEFILE WHERE EMPNO='" + empNo + "'";
+            OleDbCommand cmdH = new OleDbCommand(command, DBConnection);
+            OleDbDataReader HReader = cmdH.ExecuteReader();
+
+            while (HReader.Read())
+            {
+                if (HReader.GetValue(0).ToString().ToUpper().Trim().Equals(empNo)) 
+                {
+                    hireDate = Convert.ToDateTime(HReader.GetValue(7));
+                    currentDate = dateTimePicker1.Value;
+                    
+                    yearsService = (currentDate - hireDate).TotalDays; 
+                }
+            }
+
+            DBConnection.Close();
+           
+            if (yearsService/365 <= 1)
+                bonus = 25;
+            
+            else 
+            {
+                for (int temp = (int)yearsService/365; temp >= 1; temp--)
+                {
+                    bonus = bonus + 10;
+
+                }
+                bonus = bonus + 25;
+            }
+
+            return bonus;
+        
+        }
+
+        public Boolean checkDuplicate(string drugcode) {
+
+            Boolean found=false;
+
+            for (int x = 0; x < dataGridView1.Rows.Count - 1;x++)
+            {
+                if (drugcode.Equals(dataGridView1.Rows[x].Cells[0].Value.ToString().ToUpper().Trim()))
+                {
+                    found = true;
+                    rowDuplicate = x;
+                }
+            }
+        
+            return found;
+        }
+
+        public  void checkReturnHeader(string returnNo)
+        {
+
+            Boolean retNoFlag = false;
+            
+            //CHECK RETURNHEADER IF RETURN NUMBER IS USED
+            string commandRetHead = "Select * from RETURNHEADERFILE WHERE RETHEADCODE='" + returnNo + "'";
+            OleDbCommand cmdRetHead = new OleDbCommand(commandRetHead, DBConnection);
+            OleDbDataReader RetHeadReader = cmdRetHead.ExecuteReader();
+
+
+            while (RetHeadReader.Read())
+            {
+                retNoFlag = false;
+
+                    if (RetHeadReader.GetValue(10).ToString().ToUpper().Trim().Equals("OP"))
+                    {
+                     
+                         if (RetHeadReader.GetValue(2) == DBNull.Value)
+                        {
+                            MessageBox.Show("Return Date is missing. Please update the Return transaction first before performing the Remittance Transaction", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                            txtReturnNo.Clear();
+                        }
+                        else if (RetHeadReader.GetDateTime(2) > dateTimePicker1.Value)
+                        {
+                            MessageBox.Show("Return Date is recent that the current date. Please update the Return transaction first before performing the Remittance Transaction", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                            txtReturnNo.Clear();
+                        }
+                        else if (RetHeadReader.GetValue(3) == DBNull.Value || RetHeadReader.GetValue(3).ToString().Trim().Equals(""))
+                        {
+                            MessageBox.Show("Their is no record of the agent who executed the return transaction. Please update the Return transaction first before performing the Remittance Transaction", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                            txtReturnNo.Clear();
+                        }
+                             else if (RetHeadReader.GetValue(4) == DBNull.Value || int.Parse(RetHeadReader.GetValue(4).ToString()) <= 0)
+                        {
+                            MessageBox.Show("Return quantity dispensed is invalid. Please update the Return transaction first before performing the Remittance Transaction", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                            txtReturnNo.Clear();
+                             }
+                        else if (RetHeadReader.GetValue(5) == DBNull.Value)
+                        {
+                            MessageBox.Show("Return quantity is missing. Please update the Return transaction first before performing the Remittance Transaction", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                            txtReturnNo.Clear();
+                        }
+                        else if (RetHeadReader.GetValue(6) == DBNull.Value ||RetHeadReader.GetValue(6).ToString().Trim().Equals(""))
+                        {
+                            MessageBox.Show("Their is no record of the employee who verified the transaction. Please update the Return transaction first before performing the Remittance Transaction", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                            txtReturnNo.Clear();
+                        }
+                         else if (RetHeadReader.GetValue(9) == DBNull.Value)
+                         {
+                             MessageBox.Show("Quantity sold is missing. Please update the Return transaction first before performing the Remittance Transaction", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                             txtReturnNo.Clear();
+                         }
+
+                         else
+                         {
+                             string empNo = RetHeadReader.GetValue(3).ToString().ToUpper();
+                             //string retCheckEmp;
+                             DateTime returnDate = RetHeadReader.GetDateTime(2);
+                             //int qtyOut = 0;
+                             //int qtySold = 0;
+                             //int qtyReturn = 0;
+
+                             //checkRetCheckEmp();
+                             //checkRetDetail();                
+                             checkAgent(empNo, returnDate);
+
+
+                         }
+                }
+                else if (RetHeadReader.GetValue(10).ToString().ToUpper().Trim().Equals("CL"))
+                    {
+                        txtReturnNo.Clear();
+                        MessageBox.Show("This return transaction has already been remitted", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        txtReturnNo.Clear();
+                    }
+                    else
+                    {
+                        txtReturnNo.Clear();
+                        MessageBox.Show("The status of this return transaction cannot be indentified", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        txtReturnNo.Clear();
+                    }
+
+            }//WHILE RETURNHEADER
+
+            if (retNoFlag)
+            {
+                txtReturnNo.Clear();
+                MessageBox.Show("Return number does not exist. ", "Information", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                txtReturnNo.Clear();  
+            }
+
+        }//END checkReturnHeader
+
+        public void checkAgent(string empNo, DateTime returnDate)
+        {
+            Boolean empFlag = true;
+            string commandEmp = "Select * from EMPLOYEEFILE WHERE EMPNO='" + empNo + "'";
+            OleDbCommand cmdEmp = new OleDbCommand(commandEmp, DBConnection);
+            OleDbDataReader EmpReader = cmdEmp.ExecuteReader();
+
+            while (EmpReader.Read())
+            {
+                empFlag = false;
+
+                if (EmpReader.GetValue(9).ToString().ToUpper().Trim().Equals("AC"))
+                {
+                    
+                    //CHECK FOR EMPTYFIELDS HERE FNAME+LNAME EMPPOS+EMPRIGHTS HIREDATE  
+                    if (EmpReader.GetValue(1) == DBNull.Value || EmpReader.GetValue(1).ToString().Trim().Equals(""))
+                    {
+                        txtReturnNo.Clear();
+                        MessageBox.Show("Employee's first name is not in record", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    }
+                    else if (EmpReader.GetValue(2) == DBNull.Value || EmpReader.GetValue(2).ToString().Trim().Equals(""))
+                    {
+                        txtReturnNo.Clear();
+                        MessageBox.Show("Employee's first name is not in record", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    }
+                    else if (EmpReader.GetValue(5) == DBNull.Value || EmpReader.GetValue(5).ToString().Trim().Equals(""))
+                    {
+                        txtReturnNo.Clear();
+                        MessageBox.Show("Employee's position is not specified in the record", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    }
+                    else if (EmpReader.GetValue(7) == DBNull.Value || EmpReader.GetValue(7).ToString().Trim().Equals(""))
+                    {
+                        txtReturnNo.Clear();
+                        MessageBox.Show("Employee's hiredate is not in record", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    }
+                    else if (EmpReader.GetValue(8) == DBNull.Value || EmpReader.GetValue(8).ToString().Trim().Equals(""))
+                    {
+                        txtReturnNo.Clear();
+                        MessageBox.Show("Employee's rights are not specified in the record", "Empty Field", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    }
+                        //CHECK HIREDATE>CURRENTDATE HIREDATE>RETURNDATE 
+                    else
+                    { 
+                        int empRights = int.Parse(EmpReader.GetValue(8).ToString());
+                        string empPos = EmpReader.GetValue(5).ToString();
+                           //IF EMPLOYEE IS AN AGENT
+                        if (empRights == 3 && empPos.ToUpper().Equals("AGENT"))
+                        {
+
+                        }
+                        else if (EmpReader.GetDateTime(7) > dateTimePicker1.Value) 
+                        {
+                        
+                        }
+                        else if (!EmpReader.GetValue(2).ToString().ToUpper().Trim().Equals("") || !EmpReader.GetValue(3).ToString().ToUpper().Trim().Equals("") || !EmpReader.GetValue(4).ToString().ToUpper().Trim().Equals(""))
+                        {
+                            lblEmpNo.Text = empNo;
+                            lblEmpName.Text = EmpReader.GetValue(1).ToString().ToUpper().Trim() + " " + EmpReader.GetValue(3).ToString().ToUpper().Trim() + ". " + EmpReader.GetValue(2).ToString().ToUpper().Trim();
+                            txtRemittanceNo.Focus();
+
+                        }
+                        else
+      
+                    
+                    }
+                   
+                }
+                else if (EmpReader.GetValue(9).ToString().ToUpper().Trim().Equals("IN"))
+                {
+                    txtReturnNo.Clear();
+                    MessageBox.Show("Employee is currently inactive", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    txtReturnNo.Clear();
+                    MessageBox.Show("Employee status cannot be retrieved, ", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }//WHILE EMP
+
+            if (empFlag)
+            {
+                txtReturnNo.Clear();
+                MessageBox.Show("Employee Record is not found", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+ 
+    }
+    }
+
+
